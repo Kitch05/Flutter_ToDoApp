@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo_app/components/dialog_buttons.dart';
 import 'package:todo_app/components/task_tile.dart';
+import 'package:todo_app/data/database.dart';
 
 class TodoPage extends StatefulWidget {
   const TodoPage({super.key});
@@ -10,24 +12,34 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  List toDoList = [
-    ['Learn Flutter.', true],
-    ['Make App.', false]
-  ];
-
+  ToDoDatabase db = ToDoDatabase();
+  final _myBox = Hive.box('mybox');
   final _controller = TextEditingController();
+
+  @override
+  void initState() {
+    if (_myBox.get('TODOLIST') == null) {
+      db.initializeDatabase();
+    } else {
+      db.loadData();
+    }
+
+    super.initState();
+  }
 
   void _toggleCheckBox(int index) {
     setState(() {
-      toDoList[index][1] = !toDoList[index][1];
+      db.toDoList[index][1] = !db.toDoList[index][1];
     });
+    db.updatedDB();
   }
 
   void _submit() {
     setState(() {
-      toDoList.add([_controller.text, false]);
+      db.toDoList.add([_controller.text, false]);
       Navigator.of(context).pop();
     });
+    db.updatedDB();
   }
 
   void addTaskPrompt() {
@@ -71,8 +83,9 @@ class _TodoPageState extends State<TodoPage> {
 
   void _delete(int index) {
     setState(() {
-      toDoList.removeAt(index);
+      db.toDoList.removeAt(index);
     });
+    db.updatedDB();
   }
 
   @override
@@ -113,11 +126,11 @@ class _TodoPageState extends State<TodoPage> {
           ),
         ),
         body: ListView.builder(
-            itemCount: toDoList.length,
+            itemCount: db.toDoList.length,
             itemBuilder: (context, index) {
               return TaskTile(
-                taskName: toDoList[index][0],
-                isFinished: toDoList[index][1],
+                taskName: db.toDoList[index][0],
+                isFinished: db.toDoList[index][1],
                 onChanged: (value) => _toggleCheckBox(index),
                 delete: (context) => _delete(index),
               );
