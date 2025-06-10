@@ -37,6 +37,7 @@ class _TodoPageState extends State<TodoPage> {
   void _submit() {
     setState(() {
       db.toDoList.add([_controller.text, false]);
+      _controller.clear();
       Navigator.of(context).pop();
     });
     db.updatedDB();
